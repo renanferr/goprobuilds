@@ -1,4 +1,4 @@
-module github.com/renanferr/probuilds-g
+module github.com/renanferr/probuilds-go
 
 go 1.15
 

@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"encoding/json"
 	"log"
 
 	"github.com/anaskhan96/soup"
@@ -26,41 +27,31 @@ func matchFromRaw(raw *soup.Root) *probuilds.Match {
 	}
 }
 
-func getPath(root *soup.Root) string {
+func getPath(root soup.Root) string {
 	return root.Attrs()["href"]
 }
 
-func getChamp(root *soup.Root) string {
-	rawChampion := getChampionFromRaw(root)
-	return championFromRaw(rawChampion)
-}
-
-func getChampionFromRaw(root *soup.Root) string {
+func getChamp(root soup.Root) string {
 	return root.Find("div", "class", "block").
-		Find("div", "class", "champ")
+		Find("div", "class", "champ").
+		Find("div").
+		Find("img").Attrs()["data-id"]
 }
 
-func getOpponent(root *soup.Root) string {
-	return getChamp(root)
-}
-
-func championFromRaw(raw *soup.Root) string {
-	return raw.Find("div").
-		Find("img").Atts()["data-id"]
+func getOpponent(root soup.Root) string {
+	return root.Find("div", "class", "block").
+		Find("div", "class", "opponent").
+		Find("img").Attrs()["data-id"]
 }
 
 func getRawMatches(root soup.Root) []soup.Root {
 
-	templateScroller := root.Find("div", "id", "template_scroller")
-	mainContent := templateScroller.Find("div", "id", "maincontent")
-	container := mainContent.Find("div", "id", "container")
-	module := container.Find("div", "class", "module")
-	wrap := module.Find("div", "class", "wrap")
-	playerFeed := wrap.Find("div", "class", "pro-player-feed-5")
-	gameFeed := playerFeed.Find("div", "id", "game-feed")
-
-	rawMatches := gameFeed.FindAll("div")
-	return rawMatches
+	gameFeed := root.Find("div", "id", "game-feed")
+	// rawMatches := filterNodes(playerFeed.FindAll("div"), func(n soup.Root, i int) bool {
+	// 	class := n.Attrs()["class"]
+	// 	return (class == "build-holder")
+	// })
+	return gameFeed.FindAll("div")
 }
 
 func parseBuilds(url string) error {
@@ -69,8 +60,8 @@ func parseBuilds(url string) error {
 		return err
 	}
 
-	doc := soup.HTMLParse(resp)
-	rawMatches := getRawMatches(doc)
+	rawMatches := decodeResponse(resp)
+
 	matches := mapRawMatches(rawMatches)
 	log.Printf("%v", matches)
 	return nil
@@ -95,6 +86,27 @@ func parseExample(url string) error {
 	// 	fmt.Println(link.Text(), "| Link :", link.Attrs()["href"])
 	// }
 	return nil
+}
+
+func filterNodes(nodes []soup.Root, fn func(soup.Root, int) bool) []soup.Root {
+	var new []soup.Root
+	for i, n := range nodes {
+		if fn(n, i) {
+			new = append(new, n)
+		}
+	}
+	return new
+}
+
+func decodeResponse(resp string) []soup.Root {
+	decoded := []string{}
+	json.Unmarshal([]byte(resp), &decoded)
+	var rawMatches []soup.Root
+	for _, s := range decoded {
+		rawMatches = append(rawMatches, soup.HTMLParse(s))
+	}
+
+	return rawMatches
 }
 
 func Parse(url string) error {
