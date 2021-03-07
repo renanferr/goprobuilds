@@ -1,6 +1,6 @@
-package probuilds
+package goprobuilds
 
-type Match struct {
+type Game struct {
 	Path     string
 	Time     string
 	Champ    string
