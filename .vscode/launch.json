@@ -5,11 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Probuilds CLI",
+            "name": "goprobuilds get-games shen",
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/cmd/probuilds-cli"
+            "program": "${workspaceFolder}/cmd/cli",
+            "args": ["get-games", "shen"]
         }
     ]
 }

@@ -2,6 +2,8 @@ package http
 
 import "github.com/anaskhan96/soup"
 
+var DefaultClient = &client{}
+
 type Client interface {
 	Get(url string) (string, error)
 }
@@ -13,5 +15,6 @@ func NewClient() Client {
 }
 
 func (c *client) Get(url string) (string, error) {
-	return soup.Get(url)
+	resp, err := soup.Get(url)
+	return resp, err
 }
